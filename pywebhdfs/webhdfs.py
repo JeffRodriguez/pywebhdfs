@@ -2,6 +2,7 @@ from six.moves import http_client
 import re
 
 import requests
+
 try:
     from urllib.parse import quote, quote_plus
 except ImportError:
@@ -22,7 +23,8 @@ class PyWebHdfsClient(object):
     def __init__(self, host='localhost', port='50070', user_name=None,
                  path_to_hosts=None, timeout=120,
                  base_uri_pattern="http://{host}:{port}/webhdfs/v1/",
-                 request_extra_opts={}):
+                 request_extra_opts={},
+                 request_extra_headers={}):
         """
         Create a new client for interacting with WebHDFS
 
@@ -32,6 +34,7 @@ class PyWebHdfsClient(object):
         :param path_to_hosts: mapping paths to hostnames for federation
         :param timeout: timeout for the underlying HTTP request (def: 120 sec)
         :param base_uri_pattern: format string for base URI
+        :param request_extra_headers: dictionary of extra headers for request
         :param request_extra_opts: dictionary of extra options to pass
           to the requests library (e.g., SSL, HTTP authentication, etc.)
 
@@ -41,8 +44,10 @@ class PyWebHdfsClient(object):
 
         >>> hdfs = PyWebHdfsClient(base_uri_pattern=
         >>>     "https://knox.mycluster.local:9443/gateway/default/webhdfs/v1",
+        >>>     request_extra_headers={'X-Header':'TEST'},
         >>>     request_extra_opts={'verify': '/etc/ssl/myrootca.crt',
-        >>>                         'auth': ('username', 'password')})
+        >>>                         'auth': ('username', 'password')}
+        >>>     request_extra_headers={'X-Header':'TEST'})
         """
 
         self.host = host
@@ -51,6 +56,7 @@ class PyWebHdfsClient(object):
         self.timeout = timeout
         self.session = requests.Session()
         self.path_to_hosts = path_to_hosts
+        self.request_extra_headers = request_extra_headers
         if self.path_to_hosts is None:
             self.path_to_hosts = [('.*', [self.host])]
 
@@ -110,9 +116,12 @@ class PyWebHdfsClient(object):
         # initial response from the namenode and make the CREATE request
         # to the datanode
         uri = init_response.headers['location']
+        default_header = {'content-type': 'application/octet-stream'}
+        extra_headers = self.request_extra_headers
+        default_header.update(extra_headers)
         response = self.session.put(
             uri, data=file_data,
-            headers={'content-type': 'application/octet-stream'},
+            headers=default_header,
             **self.request_extra_opts)
 
         if not response.status_code == http_client.CREATED:
@@ -167,9 +176,12 @@ class PyWebHdfsClient(object):
         # initial response from the namenode and make the APPEND request
         # to the datanode
         uri = init_response.headers['location']
+        default_header = {'content-type': 'application/octet-stream'}
+        extra_headers = self.request_extra_headers
+        default_header.update(extra_headers)
         response = self.session.post(
             uri, data=file_data,
-            headers={'content-type': 'application/octet-stream'},
+            headers=default_header,
             **self.request_extra_opts
         )
 
@@ -739,6 +751,7 @@ class PyWebHdfsClient(object):
             try:
                 response = req_func(uri, allow_redirects=allow_redirect,
                                     timeout=self.timeout,
+                                    headers=self.request_extra_headers,
                                     **self.request_extra_opts)
 
                 if not _is_standby_exception(response):
@@ -750,7 +763,6 @@ class PyWebHdfsClient(object):
 
 
 def _raise_pywebhdfs_exception(resp_code, message=None):
-
     if resp_code == http_client.BAD_REQUEST:
         raise errors.BadRequest(msg=message)
     elif resp_code == http_client.UNAUTHORIZED:

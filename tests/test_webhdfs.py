@@ -13,7 +13,6 @@ from requests.sessions import Session
 
 
 class WhenTestingPyWebHdfsConstructor(unittest.TestCase):
-
     def test_init_default_args(self):
         webhdfs = PyWebHdfsClient()
         self.assertEqual('localhost', webhdfs.host)
@@ -37,10 +36,31 @@ class WhenTestingPyWebHdfsConstructor(unittest.TestCase):
         self.assertIsNotNone(webhdfs.path_to_hosts)
 
 
+class WhenTestingPyWebHdfsConstructorWithHeaders(unittest.TestCase):
+    def test_init_default_args(self):
+        webhdfs = PyWebHdfsClient()
+        self.assertEqual('localhost', webhdfs.host)
+        self.assertEqual('50070', webhdfs.port)
+        self.assertIsNone(webhdfs.user_name)
+        self.assertEqual(120, webhdfs.timeout)
+
+    def test_init_args_provided(self):
+        host = '127.0.0.1'
+        port = '50075'
+        user_name = 'myUser'
+        extra_header = {'X-HEADER': 'TEST'}
+
+        webhdfs = PyWebHdfsClient(host=host, port=port,
+                                  user_name=user_name,
+                                  request_extra_headers={'X-HEADER': 'TEST'})
+        self.assertEqual(host, webhdfs.host)
+        self.assertEqual(port, webhdfs.port)
+        self.assertEqual(user_name, webhdfs.user_name)
+        self.assertEqual(extra_header, webhdfs.request_extra_headers)
+
+
 class WhenTestingCreateOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -54,7 +74,6 @@ class WhenTestingCreateOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_create_throws_exception_for_no_redirect(self, mock_put):
-
         webhdfs = PyWebHdfsClient(host=self.host, port=self.port,
                                   user_name=self.user_name)
         self.init_response.status_code = http_client.BAD_REQUEST
@@ -65,7 +84,6 @@ class WhenTestingCreateOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_create_throws_exception_for_not_created(self, mock_put):
-
         webhdfs = PyWebHdfsClient(host=self.host, port=self.port,
                                   user_name=self.user_name)
         self.init_response.status_code = http_client.TEMPORARY_REDIRECT
@@ -76,7 +94,6 @@ class WhenTestingCreateOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_create_returns_file_location(self, mock_put):
-
         webhdfs = PyWebHdfsClient(host=self.host, port=self.port,
                                   user_name=self.user_name)
         self.init_response.status_code = http_client.TEMPORARY_REDIRECT
@@ -89,9 +106,7 @@ class WhenTestingCreateOperation(unittest.TestCase):
 
 
 class WhenTestingAppendOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -106,7 +121,6 @@ class WhenTestingAppendOperation(unittest.TestCase):
 
     @patch.object(Session, 'post')
     def test_append_throws_exception_for_no_redirect(self, mock_post):
-
         self.init_response.status_code = http_client.BAD_REQUEST
         self.response.status_code = http_client.OK
         mock_post.side_effect = [self.init_response, self.response]
@@ -115,7 +129,6 @@ class WhenTestingAppendOperation(unittest.TestCase):
 
     @patch.object(Session, 'post')
     def test_append_throws_exception_for_not_ok(self, mock_post):
-
         self.init_response.status_code = http_client.TEMPORARY_REDIRECT
         self.response.status_code = http_client.BAD_REQUEST
         mock_post.side_effect = [self.init_response, self.response]
@@ -124,7 +137,6 @@ class WhenTestingAppendOperation(unittest.TestCase):
 
     @patch.object(Session, 'post')
     def test_append_returns_true(self, mock_post):
-
         self.init_response.status_code = http_client.TEMPORARY_REDIRECT
         self.response.status_code = http_client.OK
         mock_post.side_effect = [self.init_response, self.response]
@@ -133,9 +145,7 @@ class WhenTestingAppendOperation(unittest.TestCase):
 
 
 class WhenTestingOpenOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -148,7 +158,6 @@ class WhenTestingOpenOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_read_throws_exception_for_not_ok(self, mock_get):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_get.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -156,7 +165,6 @@ class WhenTestingOpenOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_read_returns_file(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         result = self.webhdfs.read_file(self.path)
@@ -164,7 +172,6 @@ class WhenTestingOpenOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_stream_returns_generator(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         result = self.webhdfs.stream_file(self.path)
@@ -172,9 +179,7 @@ class WhenTestingOpenOperation(unittest.TestCase):
 
 
 class WhenTestingMkdirOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -185,7 +190,6 @@ class WhenTestingMkdirOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_mkdir_throws_exception_for_not_ok(self, mock_put):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_put.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -193,7 +197,6 @@ class WhenTestingMkdirOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_mkdir_returns_true(self, mock_put):
-
         self.response.status_code = http_client.OK
         mock_put.return_value = self.response
         result = self.webhdfs.make_dir(self.path)
@@ -201,9 +204,7 @@ class WhenTestingMkdirOperation(unittest.TestCase):
 
 
 class WhenTestingRenameOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -218,7 +219,6 @@ class WhenTestingRenameOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_rename_throws_exception_for_not_ok(self, mock_put):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_put.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -226,7 +226,6 @@ class WhenTestingRenameOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_rename_returns_true(self, mock_put):
-
         self.response.status_code = http_client.OK
         mock_put.return_value = self.response
         result = self.webhdfs.rename_file_dir(self.path, self.new_path)
@@ -234,9 +233,7 @@ class WhenTestingRenameOperation(unittest.TestCase):
 
 
 class WhenTestingDeleteOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -248,7 +245,6 @@ class WhenTestingDeleteOperation(unittest.TestCase):
 
     @patch.object(Session, 'delete')
     def test_rename_throws_exception_for_not_ok(self, mock_delete):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_delete.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -256,7 +252,6 @@ class WhenTestingDeleteOperation(unittest.TestCase):
 
     @patch.object(Session, 'delete')
     def test_rename_returns_true(self, mock_delete):
-
         self.response.status_code = http_client.OK
         mock_delete.return_value = self.response
         result = self.webhdfs.delete_file_dir(self.path)
@@ -264,9 +259,7 @@ class WhenTestingDeleteOperation(unittest.TestCase):
 
 
 class WhenTestingGetFileStatusOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -292,7 +285,6 @@ class WhenTestingGetFileStatusOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_status_throws_exception_for_not_ok(self, mock_get):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_get.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -300,7 +292,6 @@ class WhenTestingGetFileStatusOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_status_returns_true(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         result = self.webhdfs.get_file_dir_status(self.path)
@@ -310,9 +301,7 @@ class WhenTestingGetFileStatusOperation(unittest.TestCase):
 
 
 class WhenTestingGetContentSummaryOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -334,7 +323,6 @@ class WhenTestingGetContentSummaryOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_status_throws_exception_for_not_ok(self, mock_get):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_get.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -342,7 +330,6 @@ class WhenTestingGetContentSummaryOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_status_returns_true(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         result = self.webhdfs.get_content_summary(self.path)
@@ -352,9 +339,7 @@ class WhenTestingGetContentSummaryOperation(unittest.TestCase):
 
 
 class WhenTestingGetFileChecksumOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -374,7 +359,6 @@ class WhenTestingGetFileChecksumOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_status_throws_exception_for_not_ok(self, mock_get):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_get.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -382,7 +366,6 @@ class WhenTestingGetFileChecksumOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_status_returns_true(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         result = self.webhdfs.get_file_checksum(self.path)
@@ -392,9 +375,7 @@ class WhenTestingGetFileChecksumOperation(unittest.TestCase):
 
 
 class WhenTestingListDirOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -436,7 +417,6 @@ class WhenTestingListDirOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_status_throws_exception_for_not_ok(self, mock_get):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_get.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -444,7 +424,6 @@ class WhenTestingListDirOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_status_returns_true(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         result = self.webhdfs.list_dir(self.path)
@@ -454,9 +433,7 @@ class WhenTestingListDirOperation(unittest.TestCase):
 
 
 class WhenTestingFileExistsOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -482,7 +459,6 @@ class WhenTestingFileExistsOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_exists_throws_exception_for_error(self, mock_get):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_get.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -490,23 +466,19 @@ class WhenTestingFileExistsOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_exists_returns_true(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         self.assertTrue(self.webhdfs.exists_file_dir(self.path))
 
     @patch.object(Session, 'get')
     def test_exists_returns_false(self, mock_get):
-
         self.response.status_code = http_client.NOT_FOUND
         mock_get.return_value = self.response
         self.assertFalse(self.webhdfs.exists_file_dir(self.path))
 
 
 class WhenTestingGetXattrOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -527,7 +499,6 @@ class WhenTestingGetXattrOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_xattr_throws_exception_for_not_ok(self, mock_get):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_get.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -535,7 +506,6 @@ class WhenTestingGetXattrOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_get_xattr_returns_true(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         result = self.webhdfs.get_xattr(self.path, self.xattr)
@@ -545,9 +515,7 @@ class WhenTestingGetXattrOperation(unittest.TestCase):
 
 
 class WhenTestingSetXattrOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -560,7 +528,6 @@ class WhenTestingSetXattrOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_set_xattr_throws_exception_for_not_ok(self, mock_put):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_put.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -568,7 +535,6 @@ class WhenTestingSetXattrOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_set_xattr_returns_true(self, mock_put):
-
         self.response.status_code = http_client.OK
         mock_put.return_value = self.response
         result = self.webhdfs.set_xattr(self.path, self.xattr, self.value)
@@ -577,7 +543,6 @@ class WhenTestingSetXattrOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_set_xattr_replace_returns_true(self, mock_put):
-
         self.response.status_code = http_client.OK
         mock_put.return_value = self.response
         result = self.webhdfs.set_xattr(
@@ -587,9 +552,7 @@ class WhenTestingSetXattrOperation(unittest.TestCase):
 
 
 class WhenTestingListXattrsOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -607,7 +570,6 @@ class WhenTestingListXattrsOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_list_xattrs_throws_exception_for_not_ok(self, mock_get):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_get.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -615,7 +577,6 @@ class WhenTestingListXattrsOperation(unittest.TestCase):
 
     @patch.object(Session, 'get')
     def test_list_xattrs_returns_true(self, mock_get):
-
         self.response.status_code = http_client.OK
         mock_get.return_value = self.response
         result = self.webhdfs.list_xattrs(self.path)
@@ -625,9 +586,7 @@ class WhenTestingListXattrsOperation(unittest.TestCase):
 
 
 class WhenTestingDeleteXattrOperation(unittest.TestCase):
-
     def setUp(self):
-
         self.host = 'hostname'
         self.port = '00000'
         self.user_name = 'username'
@@ -639,7 +598,6 @@ class WhenTestingDeleteXattrOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_delete_xattr_throws_exception_for_not_ok(self, mock_put):
-
         self.response.status_code = http_client.BAD_REQUEST
         mock_put.return_value = self.response
         with self.assertRaises(errors.PyWebHdfsException):
@@ -647,7 +605,6 @@ class WhenTestingDeleteXattrOperation(unittest.TestCase):
 
     @patch.object(Session, 'put')
     def test_delete_xattr_returns_true(self, mock_put):
-
         self.response.status_code = http_client.OK
         mock_put.return_value = self.response
         result = self.webhdfs.delete_xattr(self.path, self.xattr)
@@ -656,7 +613,6 @@ class WhenTestingDeleteXattrOperation(unittest.TestCase):
 
 
 class WhenTestingCreateUri(unittest.TestCase):
-
     def setUp(self):
         self.host = 'hostname'
         self.port = '00000'
@@ -668,9 +624,9 @@ class WhenTestingCreateUri(unittest.TestCase):
     def test_create_uri_no_kwargs(self):
         op = operations.CREATE
         uri = 'http://{{host}}:{port}/webhdfs/v1/' \
-              '{path}?op={op}&user.name={user}'\
-              .format(port=self.port, path=self.path,
-                      op=op, user=self.user_name)
+              '{path}?op={op}&user.name={user}' \
+            .format(port=self.port, path=self.path,
+                    op=op, user=self.user_name)
         result = self.webhdfs._create_uri(self.path, op)
         self.assertEqual(uri, result)
 
@@ -681,9 +637,9 @@ class WhenTestingCreateUri(unittest.TestCase):
         uri = 'http://{{host}}:{port}/webhdfs/v1/' \
               '{path}?op={op}&{key}={val}' \
               '&user.name={user}' \
-              .format(
-                  port=self.port, path=self.path,
-                  op=op, key=mykey, val=myval, user=self.user_name)
+            .format(
+            port=self.port, path=self.path,
+            op=op, key=mykey, val=myval, user=self.user_name)
         result = self.webhdfs._create_uri(self.path, op,
                                           mykey=myval)
         self.assertEqual(uri, result)
@@ -703,15 +659,14 @@ class WhenTestingCreateUri(unittest.TestCase):
         uri = 'http://{{host}}:{port}/webhdfs/v1/' \
               '{path}?op={op}&{key}={val}' \
               '&user.name={user}' \
-              .format(
-                  port=self.port, path=quoted_path,
-                  op=op, key=mykey, val=myval, user=self.user_name)
+            .format(
+            port=self.port, path=quoted_path,
+            op=op, key=mykey, val=myval, user=self.user_name)
         result = self.webhdfs._create_uri(path, op, mykey=myval)
         self.assertEqual(uri, result)
 
 
 class WhenTestingRaiseExceptions(unittest.TestCase):
-
     def test_400_raises_bad_request(self):
         with self.assertRaises(errors.BadRequest):
             _raise_pywebhdfs_exception(http_client.BAD_REQUEST)
